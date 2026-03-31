@@ -92,7 +92,7 @@ export function doubles2logs(doubles: number[]) {
   }, {} as Partial<LogsMap>)
 }
 
-export function useAccessLog(event: H3Event) {
+export async function useAccessLog(event: H3Event): Promise<LogsMap | null> {
   const ip = getHeader(event, 'cf-connecting-ip') || getHeader(event, 'x-real-ip') || getRequestIP(event, { xForwardedFor: true })
 
   const { host: referer } = parseURL(getHeader(event, 'referer'))
@@ -121,7 +121,7 @@ export function useAccessLog(event: H3Event) {
   const { disableBotAccessLog } = useRuntimeConfig(event)
   if (isBot && disableBotAccessLog) {
     console.log('bot access log disabled:', userAgent)
-    return Promise.resolve()
+    return null
   }
 
   const regionNames = new Intl.DisplayNames(['en'], { type: 'region' })
@@ -150,13 +150,15 @@ export function useAccessLog(event: H3Event) {
   }
 
   if (process.env.NODE_ENV === 'production') {
-    return env.ANALYTICS.writeDataPoint({
+    await env.ANALYTICS.writeDataPoint({
       indexes: [link.id], // only one index
       blobs: logs2blobs(accessLogs),
       doubles: logs2doubles(accessLogs),
     })
   }
+  else {
+    console.log('access logs:', accessLogs, logs2blobs(accessLogs), logs2doubles(accessLogs), { ...blobs2logs(logs2blobs(accessLogs)), ...doubles2logs(logs2doubles(accessLogs)) })
+  }
 
-  console.log('access logs:', accessLogs, logs2blobs(accessLogs), logs2doubles(accessLogs), { ...blobs2logs(logs2blobs(accessLogs)), ...doubles2logs(logs2doubles(accessLogs)) })
-  return Promise.resolve()
+  return accessLogs as LogsMap
 }

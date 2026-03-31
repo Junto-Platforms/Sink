@@ -72,6 +72,7 @@
     "nuxt": "^4.3.0",
     "p-limit": "^7.3.0",
     "pluralize": "^8.0.0",
+    "posthog-node": "^5.28.9",
     "qr-code-styling": "^1.9.2",
     "reka-ui": "^2.8.0",
     "shadcn-nuxt": "^2.4.3",
