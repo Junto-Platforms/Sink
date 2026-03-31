@@ -36,7 +36,7 @@ export async function captureRedirectEvent(
 
   const distinctId = await hashIp(ip)
 
-  ph.capture({
+  await ph.captureImmediate({
     distinctId,
     event: 'link_clicked',
     properties: {
