@@ -128,11 +128,29 @@ export default eventHandler(async (event) => {
       }
 
       event.context.link = link
+      let accessLogs: LogsMap | null = null
       try {
-        await useAccessLog(event)
+        accessLogs = await useAccessLog(event)
       }
       catch (error) {
         console.error('Failed write access log:', error)
+      }
+
+      if (accessLogs) {
+        const { context: cfCtx } = event.context.cloudflare
+        cfCtx.waitUntil(
+          captureRedirectEvent(event, accessLogs.ip || '', {
+            slug: accessLogs.slug,
+            url: accessLogs.url,
+            referer: accessLogs.referer,
+            country: accessLogs.country,
+            city: accessLogs.city,
+            os: accessLogs.os,
+            browser: accessLogs.browser,
+            device: accessLogs.device,
+            deviceType: accessLogs.deviceType,
+          }).catch(err => console.error('PostHog capture failed:', err)),
+        )
       }
 
       const userAgent = getHeader(event, 'user-agent') || ''
